@@ -30,10 +30,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: "recursive"
-      - name: "Install Rust"
+      - name: "Install Rust for x86_64"
         uses: dtolnay/rust-toolchain@stable
         with:
           target: "x86_64-pc-windows-msvc"
+      - name: "Install Rust for aarch64"
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          target: "aarch64-pc-windows-msvc"
       - name: "Compile with sccache"
         uses: mozilla-actions/sccache-action@v0.0.5
       - name: "Cache Rust Dependencies"
@@ -44,30 +48,50 @@ jobs:
             vendor
             .cargo/config
           key: "cargo-deps-${{ hashFiles('**/Cargo.lock') }}"
-      - name: "Vendor dependecies"
+      - name: "Vendor dependencies"
         if: steps.cache-cargo-vendor.outputs.cache-hit != 'true'
         shell: bash
         run: "cargo vendor --locked --versioned-dirs >> .cargo/config"
-      - name: "Build wezterm (Release mode)"
+      - name: "Build wezterm for x86_64 (Release mode)"
         shell: cmd
         run: |
           PATH C:\Strawberry\perl\bin;%PATH%
-          cargo build -p wezterm --release
-      - name: "Build wezterm-gui (Release mode)"
+          cargo build -p wezterm --release --target x86_64-pc-windows-msvc
+      - name: "Build wezterm for aarch64 (Release mode)"
         shell: cmd
         run: |
           PATH C:\Strawberry\perl\bin;%PATH%
-          cargo build -p wezterm-gui --release
-      - name: "Build wezterm-mux-server (Release mode)"
+          cargo build -p wezterm --release --target aarch64-pc-windows-msvc
+      - name: "Build wezterm-gui for x86_64 (Release mode)"
         shell: cmd
         run: |
           PATH C:\Strawberry\perl\bin;%PATH%
-          cargo build -p wezterm-mux-server --release
-      - name: "Build strip-ansi-escapes (Release mode)"
+          cargo build -p wezterm-gui --release --target x86_64-pc-windows-msvc
+      - name: "Build wezterm-gui for aarch64 (Release mode)"
         shell: cmd
         run: |
           PATH C:\Strawberry\perl\bin;%PATH%
-          cargo build -p strip-ansi-escapes --release
+          cargo build -p wezterm-gui --release --target aarch64-pc-windows-msvc
+      - name: "Build wezterm-mux-server for x86_64 (Release mode)"
+        shell: cmd
+        run: |
+          PATH C:\Strawberry\perl\bin;%PATH%
+          cargo build -p wezterm-mux-server --release --target x86_64-pc-windows-msvc
+      - name: "Build wezterm-mux-server for aarch64 (Release mode)"
+        shell: cmd
+        run: |
+          PATH C:\Strawberry\perl\bin;%PATH%
+          cargo build -p wezterm-mux-server --release --target aarch64-pc-windows-msvc
+      - name: "Build strip-ansi-escapes for x86_64 (Release mode)"
+        shell: cmd
+        run: |
+          PATH C:\Strawberry\perl\bin;%PATH%
+          cargo build -p strip-ansi-escapes --release --target x86_64-pc-windows-msvc
+      - name: "Build strip-ansi-escapes for aarch64 (Release mode)"
+        shell: cmd
+        run: |
+          PATH C:\Strawberry\perl\bin;%PATH%
+          cargo build -p strip-ansi-escapes --release --target aarch64-pc-windows-msvc
       - name: "Install cargo-nextest from Cargo"
         uses: baptiste0928/cargo-install@v3
         with:
@@ -77,7 +101,8 @@ jobs:
         shell: cmd
         run: |
           PATH C:\Strawberry\perl\bin;%PATH%
-          cargo nextest run --all --no-fail-fast
+          cargo nextest run --all --no-fail-fast --target x86_64-pc-windows-msvc
+          cargo nextest run --all --no-fail-fast --target aarch64-pc-windows-msvc
       - name: "Package"
         shell: bash
         run: "bash ci/deploy.sh"
