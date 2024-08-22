@@ -78,9 +78,13 @@ fn libpng() {
         match arch.as_str() {
             "aarch64" | "arm" => {
                 cfg.file("libpng/arm/arm_init.c")
-                    .file("libpng/arm/filter_neon.S")
                     .file("libpng/arm/filter_neon_intrinsics.c")
                     .file("libpng/arm/palette_neon_intrinsics.c");
+                if let Ok(os) = env::var("CARGO_CFG_TARGET_OS") {
+                    if os != "windows" {
+                        cfg.file("libpng/arm/filter_neon.S");
+                    }
+                }
             }
             _ => {}
         }
